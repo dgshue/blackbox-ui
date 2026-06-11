@@ -1,0 +1,11 @@
+.git
+.github
+.claude
+node_modules
+test
+deploy
+docs
+*.md
+*.tar
+.gitignore
+.dockerignore

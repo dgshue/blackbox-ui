@@ -1,0 +1,39 @@
+# Dev stack for Portainer (stack name: blackbox-dev)
+# Uses the locally-built image blackbox-ui:0.1.0-dev (built via the Portainer
+# Docker API from this repo) instead of the published ghcr.io image.
+
+services:
+  blackbox:
+    image: prom/blackbox-exporter:v0.28.0
+    container_name: blackbox-dev
+    restart: unless-stopped
+    command:
+      - --config.file=/config/blackbox.yml
+    ports:
+      - "9115:9115"
+    cap_add:
+      - NET_RAW
+    sysctls:
+      net.ipv4.ping_group_range: "0 2147483647"
+    volumes:
+      - blackbox-config:/config
+    depends_on:
+      blackbox-ui:
+        condition: service_healthy
+
+  blackbox-ui:
+    image: blackbox-ui:0.1.0-dev
+    container_name: blackbox-ui-dev
+    restart: unless-stopped
+    pull_policy: never
+    environment:
+      CONFIG_PATH: /config/blackbox.yml
+      BLACKBOX_URL: http://blackbox:9115
+      PUBLIC_BLACKBOX_URL: http://192.168.1.10:9115
+    ports:
+      - "9116:8080"
+    volumes:
+      - blackbox-config:/config
+
+volumes:
+  blackbox-config:

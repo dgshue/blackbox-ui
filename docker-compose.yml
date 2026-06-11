@@ -1,0 +1,46 @@
+# Blackbox Exporter + blackbox-ui sidecar
+#
+# The two containers share the "blackbox-config" volume. blackbox-ui seeds a
+# default config on first start (which is why blackbox waits for it to be
+# healthy), then edits the file and triggers POST /-/reload on blackbox.
+
+services:
+  blackbox:
+    image: prom/blackbox-exporter:v0.28.0
+    container_name: blackbox
+    restart: unless-stopped
+    command:
+      - --config.file=/config/blackbox.yml
+    ports:
+      - "9115:9115"
+    cap_add:
+      - NET_RAW # ICMP probes
+    sysctls:
+      # Allow unprivileged ICMP (blackbox runs as "nobody")
+      net.ipv4.ping_group_range: "0 2147483647"
+    volumes:
+      - blackbox-config:/config
+    depends_on:
+      blackbox-ui:
+        condition: service_healthy
+
+  blackbox-ui:
+    image: ghcr.io/dgshue/blackbox-ui:latest
+    container_name: blackbox-ui
+    restart: unless-stopped
+    environment:
+      CONFIG_PATH: /config/blackbox.yml
+      BLACKBOX_URL: http://blackbox:9115
+      # Optional:
+      # PUBLIC_BLACKBOX_URL: http://your-host:9115   # adds an "Open blackbox" link in the UI
+      # BASIC_AUTH_USERNAME: admin
+      # BASIC_AUTH_PASSWORD: change-me
+      # READ_ONLY: "true"
+      # BACKUP_KEEP: "20"
+    ports:
+      - "9116:8080"
+    volumes:
+      - blackbox-config:/config
+
+volumes:
+  blackbox-config:

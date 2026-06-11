@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blackbox UI</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='2' y='2' width='20' height='20' rx='4' fill='%23161b22' stroke='%23e6522c' stroke-width='2'/%3E%3Cpath d='M5 12h3l2-5 4 10 2-5h3' fill='none' stroke='%23e6522c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/vendor/codemirror/lib/codemirror.css" />
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+        <rect x="2" y="2" width="20" height="20" rx="4" fill="none" stroke="var(--accent)" stroke-width="2"/>
+        <path d="M5 12h3l2-5 4 10 2-5h3" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div>
+        <h1>Blackbox UI</h1>
+        <span id="app-version" class="muted"></span>
+      </div>
+    </div>
+    <div class="top-status">
+      <span id="pill-blackbox" class="pill"><span class="dot"></span><span class="pill-text">blackbox…</span></span>
+      <span id="pill-dirty" class="pill pill-dirty hidden"><span class="pill-text">unsaved changes</span></span>
+    </div>
+    <div class="top-actions">
+      <button id="btn-validate" class="btn">Validate</button>
+      <button id="btn-backups" class="btn">Backups</button>
+      <button id="btn-save" class="btn btn-primary" title="Ctrl+S">Save &amp; Reload</button>
+    </div>
+  </header>
+
+  <div id="banner" class="banner hidden"></div>
+  <div id="issues" class="issues hidden">
+    <div class="issues-head">
+      <strong id="issues-title">Validation results</strong>
+      <button id="issues-close" class="btn btn-ghost">✕</button>
+    </div>
+    <ul id="issues-list"></ul>
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="side-head">
+        <span>Modules</span>
+        <button id="btn-add-module" class="btn btn-small btn-primary">+ Add</button>
+      </div>
+      <ul id="module-list" class="module-list"></ul>
+      <div class="side-foot">
+        <div id="config-path" class="muted mono"></div>
+        <div class="side-links">
+          <a id="link-blackbox" class="hidden" target="_blank" rel="noopener">Open blackbox ↗</a>
+          <a id="link-loaded" href="/api/blackbox/config" target="_blank" rel="noopener">Loaded config ↗</a>
+          <a id="link-docs" target="_blank" rel="noopener">Config docs ↗</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <nav class="tabs">
+        <button id="tab-form" class="tab active">Builder</button>
+        <button id="tab-yaml" class="tab">YAML</button>
+      </nav>
+
+      <section id="view-form" class="view">
+        <div id="module-editor"></div>
+        <section id="test-panel" class="test-panel hidden">
+          <h3>Test this module</h3>
+          <div class="test-row">
+            <input id="test-target" type="text" placeholder="target" spellcheck="false" />
+            <button id="btn-test" class="btn">Run probe</button>
+          </div>
+          <div id="test-result" class="test-result hidden"></div>
+        </section>
+      </section>
+
+      <section id="view-yaml" class="view hidden">
+        <div id="cm-host"></div>
+        <div id="yaml-status" class="yaml-status mono"></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="modal-add">
+    <form method="dialog" class="modal-form">
+      <h2 id="modal-add-title">Add module</h2>
+      <label>Module name
+        <input id="add-name" type="text" placeholder="http_2xx" pattern="[a-zA-Z0-9_-]+" spellcheck="false" required />
+      </label>
+      <label id="add-prober-wrap">Prober
+        <select id="add-prober"></select>
+      </label>
+      <p id="add-prober-desc" class="muted"></p>
+      <p id="add-error" class="error-text hidden"></p>
+      <div class="modal-actions">
+        <button value="cancel" class="btn" formnovalidate>Cancel</button>
+        <button id="add-submit" value="ok" class="btn btn-primary">Add</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="modal-backups">
+    <div class="modal-form">
+      <h2>Backups</h2>
+      <p class="muted">A backup is taken automatically before every save. Restoring also creates a backup of the current file.</p>
+      <ul id="backup-list" class="backup-list"></ul>
+      <div class="modal-actions">
+        <button id="backups-close" class="btn">Close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="modal-confirm">
+    <form method="dialog" class="modal-form">
+      <h2 id="confirm-title">Confirm</h2>
+      <p id="confirm-text"></p>
+      <div class="modal-actions">
+        <button value="cancel" class="btn">Cancel</button>
+        <button id="confirm-ok" value="ok" class="btn btn-danger">Confirm</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toasts" class="toasts"></div>
+
+  <script src="/vendor/codemirror/lib/codemirror.js"></script>
+  <script src="/vendor/codemirror/mode/yaml/yaml.js"></script>
+  <script src="/vendor/js-yaml/js-yaml.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/forms.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

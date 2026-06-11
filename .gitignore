@@ -1,0 +1,14 @@
+# Claude Code
+.claude/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Build / packaging artifacts
+*.tar
+*.tgz
+
+# Local scratch
+tmp/
+.DS_Store

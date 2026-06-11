@@ -1,0 +1,213 @@
+{
+  "blackboxVersion": "v0.28.0",
+  "docsUrl": "https://github.com/prometheus/blackbox_exporter/blob/v0.28.0/CONFIGURATION.md",
+  "module": {
+    "timeout": {
+      "type": "duration",
+      "label": "Timeout",
+      "help": "How long the probe will wait before giving up. Should be lower than your Prometheus scrape_timeout.",
+      "placeholder": "5s"
+    }
+  },
+  "types": {
+    "tls_config": {
+      "label": "TLS configuration",
+      "fields": {
+        "insecure_skip_verify": { "type": "bool", "label": "Skip certificate validation", "default": false, "help": "Disable target certificate validation." },
+        "ca_file": { "type": "string", "label": "CA file", "help": "The CA cert to use for the targets (path inside the blackbox container)." },
+        "cert_file": { "type": "string", "label": "Client cert file", "help": "The client cert file for the targets." },
+        "key_file": { "type": "string", "label": "Client key file", "help": "The client key file for the targets." },
+        "server_name": { "type": "string", "label": "Server name", "help": "Used to verify the hostname for the targets (SNI)." },
+        "min_version": { "type": "enum", "label": "Min TLS version", "enum": ["TLS10", "TLS11", "TLS12", "TLS13"], "help": "Minimum acceptable TLS version. Go default is TLS 1.2." },
+        "max_version": { "type": "enum", "label": "Max TLS version", "enum": ["TLS10", "TLS11", "TLS12", "TLS13"], "help": "Maximum acceptable TLS version. Can be used to test for the presence of insecure TLS versions." }
+      }
+    },
+    "basic_auth": {
+      "label": "Basic auth",
+      "fields": {
+        "username": { "type": "string", "label": "Username" },
+        "password": { "type": "secret", "label": "Password" },
+        "username_file": { "type": "string", "label": "Username file", "advanced": true, "help": "Read the username from a file (path inside the blackbox container)." },
+        "password_file": { "type": "string", "label": "Password file", "advanced": true, "help": "Read the password from a file." }
+      }
+    },
+    "authorization": {
+      "label": "Authorization header",
+      "fields": {
+        "type": { "type": "string", "label": "Type", "placeholder": "Bearer", "help": "Authentication type for the Authorization header. Default: Bearer." },
+        "credentials": { "type": "secret", "label": "Credentials", "help": "Mutually exclusive with credentials file." },
+        "credentials_file": { "type": "string", "label": "Credentials file", "help": "Read credentials from a file. Mutually exclusive with credentials." }
+      }
+    },
+    "oauth2": {
+      "label": "OAuth 2.0 (experimental)",
+      "fields": {
+        "client_id": { "type": "string", "label": "Client ID" },
+        "client_secret": { "type": "secret", "label": "Client secret" },
+        "client_secret_file": { "type": "string", "label": "Client secret file", "advanced": true },
+        "token_url": { "type": "string", "label": "Token URL", "placeholder": "https://idp.example.com/oauth2/token" },
+        "scopes": { "type": "stringlist", "label": "Scopes" },
+        "endpoint_params": { "type": "map", "label": "Endpoint params", "advanced": true, "help": "Optional parameters to append to the token URL." }
+      }
+    },
+    "header_match": {
+      "label": "Header match",
+      "fields": {
+        "header": { "type": "string", "label": "Header", "required": true, "placeholder": "Content-Type" },
+        "regexp": { "type": "string", "label": "Regexp", "required": true, "placeholder": "application/json" },
+        "allow_missing": { "type": "bool", "label": "Allow missing", "default": false, "help": "Do not fail if the header is absent." }
+      }
+    },
+    "qr_label": {
+      "label": "Label",
+      "fields": {
+        "name": { "type": "string", "label": "Name" },
+        "value": { "type": "string", "label": "Value", "help": "May reference groups captured by expect, such as ${1}." }
+      }
+    },
+    "query_response": {
+      "label": "Step",
+      "fields": {
+        "expect": { "type": "string", "label": "Expect (regex)", "help": "Wait for a line matching this regex. Mutually exclusive with expect bytes." },
+        "expect_bytes": { "type": "string", "label": "Expect bytes", "advanced": true, "help": "Exact byte-by-byte match. Mutually exclusive with expect." },
+        "send": { "type": "string", "label": "Send", "help": "Content to send. May reference groups captured by expect, such as ${1}." },
+        "starttls": { "type": "bool", "label": "STARTTLS", "default": false, "help": "Upgrade the connection to TLS at this step." },
+        "labels": { "type": "objectlist", "label": "Export labels", "item": { "ref": "qr_label" }, "advanced": true, "help": "Labels exported on the probe_expect_info metric." }
+      }
+    },
+    "query_response_unix": {
+      "label": "Step",
+      "fields": {
+        "expect": { "type": "string", "label": "Expect (regex)", "help": "Wait for a line matching this regex." },
+        "send": { "type": "string", "label": "Send", "help": "Content to send. May reference groups captured by expect, such as ${1}." },
+        "starttls": { "type": "bool", "label": "STARTTLS", "default": false, "help": "Upgrade the connection to TLS at this step." },
+        "labels": { "type": "objectlist", "label": "Export labels", "item": { "ref": "qr_label" }, "advanced": true, "help": "Labels exported on the probe_expect_info metric." }
+      }
+    },
+    "validate_rrs": {
+      "label": "Resource record validation",
+      "fields": {
+        "fail_if_matches_regexp": { "type": "stringlist", "label": "Fail if matches regexp", "help": "Fail if any RR matches one of these regexes." },
+        "fail_if_all_match_regexp": { "type": "stringlist", "label": "Fail if all match regexp", "help": "Fail if every RR matches one of these regexes." },
+        "fail_if_not_matches_regexp": { "type": "stringlist", "label": "Fail if not matches regexp", "help": "Fail if any RR does not match one of these regexes." },
+        "fail_if_none_matches_regexp": { "type": "stringlist", "label": "Fail if none matches regexp", "help": "Fail if no RR matches one of these regexes." }
+      }
+    }
+  },
+  "probes": {
+    "http": {
+      "label": "HTTP",
+      "description": "Probe a URL over HTTP/HTTPS. Target example: https://example.com",
+      "targetHint": "https://example.com",
+      "template": { "timeout": "5s", "http": { "preferred_ip_protocol": "ip4" } },
+      "fields": {
+        "method": { "type": "enum", "label": "Method", "enum": ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "PATCH"], "allowCustom": true, "default": "GET", "help": "The HTTP method the probe will use." },
+        "valid_status_codes": { "type": "intlist", "label": "Valid status codes", "placeholder": "200, 301, 302", "help": "Accepted status codes. Empty defaults to any 2xx." },
+        "valid_http_versions": { "type": "stringlist", "label": "Valid HTTP versions", "placeholder": "HTTP/1.1\nHTTP/2.0", "help": "Accepted HTTP versions for this probe." },
+        "headers": { "type": "map", "label": "Request headers", "keyPlaceholder": "Header", "valuePlaceholder": "Value", "help": "HTTP headers set for the probe." },
+        "body": { "type": "string", "label": "Request body", "multiline": true, "help": "The body of the HTTP request. Mutually exclusive with body file." },
+        "body_file": { "type": "string", "label": "Body file", "advanced": true, "help": "Read the request body from a file (path inside the blackbox container). Mutually exclusive with body." },
+        "follow_redirects": { "type": "bool", "label": "Follow redirects", "default": true },
+        "fail_if_ssl": { "type": "bool", "label": "Fail if SSL", "default": false, "help": "Probe fails if SSL is present." },
+        "fail_if_not_ssl": { "type": "bool", "label": "Fail if not SSL", "default": false, "help": "Probe fails if SSL is not present." },
+        "fail_if_body_matches_regexp": { "type": "stringlist", "label": "Fail if body matches regexp" },
+        "fail_if_body_not_matches_regexp": { "type": "stringlist", "label": "Fail if body does not match regexp" },
+        "fail_if_header_matches": { "type": "objectlist", "label": "Fail if header matches", "item": { "ref": "header_match" } },
+        "fail_if_header_not_matches": { "type": "objectlist", "label": "Fail if header does not match", "item": { "ref": "header_match" } },
+        "fail_if_body_json_matches_cel": { "type": "string", "label": "Fail if body JSON matches CEL", "advanced": true, "help": "CEL expression evaluated against the JSON response body. Probe fails on match or if response is not JSON." },
+        "fail_if_body_json_not_matches_cel": { "type": "string", "label": "Fail if body JSON does not match CEL", "advanced": true },
+        "tls_config": { "type": "object", "label": "TLS configuration", "ref": "tls_config", "collapsible": true },
+        "basic_auth": { "type": "object", "label": "Basic auth", "ref": "basic_auth", "collapsible": true },
+        "authorization": { "type": "object", "label": "Authorization header", "ref": "authorization", "collapsible": true },
+        "oauth2": { "type": "object", "label": "OAuth 2.0", "ref": "oauth2", "collapsible": true, "advanced": true },
+        "preferred_ip_protocol": { "type": "enum", "label": "Preferred IP protocol", "enum": ["ip4", "ip6"], "default": "ip6" },
+        "ip_protocol_fallback": { "type": "bool", "label": "IP protocol fallback", "default": true, "help": "Allow falling back to the other IP protocol." },
+        "compression": { "type": "enum", "label": "Compression", "enum": ["gzip", "br", "deflate", "identity"], "advanced": true, "help": "Algorithm used to decompress the response." },
+        "body_size_limit": { "type": "size", "label": "Body size limit", "placeholder": "10MB", "advanced": true, "help": "Maximum uncompressed body length processed. 0 means no limit." },
+        "enable_http2": { "type": "bool", "label": "Enable HTTP/2", "default": true, "advanced": true },
+        "enable_http3": { "type": "bool", "label": "Enable HTTP/3", "default": false, "advanced": true, "help": "When enabled, HTTP/2 must be disabled and valid_http_versions must not include HTTP/2.0." },
+        "proxy_url": { "type": "string", "label": "Proxy URL", "advanced": true },
+        "no_proxy": { "type": "string", "label": "No proxy", "advanced": true, "help": "Comma-separated IPs, CIDRs, or domain names excluded from proxying." },
+        "proxy_from_environment": { "type": "bool", "label": "Proxy from environment", "default": false, "advanced": true },
+        "proxy_connect_header": { "type": "maplist", "label": "Proxy CONNECT headers", "advanced": true, "help": "Headers sent to proxies during CONNECT requests." },
+        "skip_resolve_phase_with_proxy": { "type": "bool", "label": "Skip resolve phase with proxy", "default": false, "advanced": true },
+        "http_headers": { "type": "raw", "label": "http_headers", "advanced": true, "help": "Headers from values, secrets, or files. Edit in YAML mode." }
+      }
+    },
+    "tcp": {
+      "label": "TCP",
+      "description": "Establish a TCP connection, optionally exchanging payloads. Target example: smtp.example.com:25",
+      "targetHint": "host:port",
+      "template": { "timeout": "5s" },
+      "fields": {
+        "query_response": { "type": "objectlist", "label": "Query/response script", "item": { "ref": "query_response" }, "help": "Ordered send/expect steps executed after the connection is established." },
+        "tls": { "type": "bool", "label": "TLS on connect", "default": false, "help": "Use TLS when the connection is initiated." },
+        "tls_config": { "type": "object", "label": "TLS configuration", "ref": "tls_config", "collapsible": true },
+        "preferred_ip_protocol": { "type": "enum", "label": "Preferred IP protocol", "enum": ["ip4", "ip6"], "default": "ip6" },
+        "ip_protocol_fallback": { "type": "bool", "label": "IP protocol fallback", "default": true },
+        "source_ip_address": { "type": "string", "label": "Source IP address", "advanced": true }
+      }
+    },
+    "dns": {
+      "label": "DNS",
+      "description": "Query a DNS server and validate the answer. Target is the DNS server to query, e.g. 1.1.1.1",
+      "targetHint": "dns-server (e.g. 1.1.1.1)",
+      "template": { "timeout": "5s", "dns": { "query_name": "example.com", "query_type": "A" } },
+      "fields": {
+        "query_name": { "type": "string", "label": "Query name", "required": true, "placeholder": "example.com", "help": "The name to look up." },
+        "query_type": { "type": "enum", "label": "Query type", "enum": ["A", "AAAA", "ANY", "CNAME", "MX", "NS", "PTR", "SOA", "SRV", "TXT", "CAA", "DNSKEY", "DS", "TLSA"], "allowCustom": true, "default": "ANY" },
+        "query_class": { "type": "enum", "label": "Query class", "enum": ["IN", "CH", "HS"], "default": "IN", "advanced": true },
+        "transport_protocol": { "type": "enum", "label": "Transport protocol", "enum": ["udp", "tcp"], "default": "udp" },
+        "valid_rcodes": { "type": "stringlist", "label": "Valid rcodes", "placeholder": "NOERROR", "help": "List of valid response codes. Default: NOERROR." },
+        "recursion_desired": { "type": "bool", "label": "Recursion desired", "default": true, "advanced": true, "help": "Set the RD flag in the request." },
+        "validate_answer_rrs": { "type": "object", "label": "Validate answer RRs", "ref": "validate_rrs", "collapsible": true },
+        "validate_authority_rrs": { "type": "object", "label": "Validate authority RRs", "ref": "validate_rrs", "collapsible": true },
+        "validate_additional_rrs": { "type": "object", "label": "Validate additional RRs", "ref": "validate_rrs", "collapsible": true },
+        "dns_over_tls": { "type": "bool", "label": "DNS over TLS", "default": false, "advanced": true, "help": "Only works with the TCP transport protocol." },
+        "tls_config": { "type": "object", "label": "TLS configuration", "ref": "tls_config", "collapsible": true, "advanced": true },
+        "preferred_ip_protocol": { "type": "enum", "label": "Preferred IP protocol", "enum": ["ip4", "ip6"], "default": "ip6" },
+        "ip_protocol_fallback": { "type": "bool", "label": "IP protocol fallback", "default": true },
+        "source_ip_address": { "type": "string", "label": "Source IP address", "advanced": true }
+      }
+    },
+    "icmp": {
+      "label": "ICMP",
+      "description": "Ping a host via ICMP echo. Target example: 192.168.1.1 — requires NET_RAW or an unprivileged ping range on the blackbox container.",
+      "targetHint": "host or IP",
+      "template": { "timeout": "5s", "icmp": { "preferred_ip_protocol": "ip4" } },
+      "fields": {
+        "preferred_ip_protocol": { "type": "enum", "label": "Preferred IP protocol", "enum": ["ip4", "ip6"], "default": "ip6" },
+        "ip_protocol_fallback": { "type": "bool", "label": "IP protocol fallback", "default": true },
+        "payload_size": { "type": "int", "label": "Payload size", "help": "The size of the ICMP payload in bytes." },
+        "dont_fragment": { "type": "bool", "label": "Don't fragment", "default": false, "help": "Set the DF bit in the IP header. ip4 only; requires raw sockets (root or CAP_NET_RAW)." },
+        "ttl": { "type": "int", "label": "TTL", "help": "TTL of outbound packets, 0-255. Useful to test reachability within a number of hops." },
+        "source_ip_address": { "type": "string", "label": "Source IP address", "advanced": true }
+      }
+    },
+    "grpc": {
+      "label": "gRPC",
+      "description": "Check a gRPC endpoint via the health checking protocol. Target example: grpc.example.com:443",
+      "targetHint": "host:port",
+      "template": { "timeout": "5s" },
+      "fields": {
+        "service": { "type": "string", "label": "Service", "help": "The service name to query for health status. Empty checks overall server health." },
+        "tls": { "type": "bool", "label": "TLS", "default": false, "help": "Connect to the endpoint with TLS." },
+        "tls_config": { "type": "object", "label": "TLS configuration", "ref": "tls_config", "collapsible": true },
+        "metadata": { "type": "maplist", "label": "Client metadata", "advanced": true, "help": "gRPC client metadata, one or more values per key." },
+        "preferred_ip_protocol": { "type": "enum", "label": "Preferred IP protocol", "enum": ["ip4", "ip6"], "default": "ip6" },
+        "ip_protocol_fallback": { "type": "bool", "label": "IP protocol fallback", "default": true }
+      }
+    },
+    "unix": {
+      "label": "Unix socket",
+      "description": "Probe a Unix domain socket, optionally exchanging payloads. Target example: /run/app/app.sock",
+      "targetHint": "/path/to/socket.sock",
+      "template": { "timeout": "5s" },
+      "fields": {
+        "query_response": { "type": "objectlist", "label": "Query/response script", "item": { "ref": "query_response_unix" }, "help": "Ordered send/expect steps executed after the connection is established." },
+        "tls": { "type": "bool", "label": "TLS on connect", "default": false },
+        "tls_config": { "type": "object", "label": "TLS configuration", "ref": "tls_config", "collapsible": true }
+      }
+    }
+  }
+}
