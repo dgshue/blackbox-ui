@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "codemirror": "5.65.18",
-    "express": "5.1.0",
+    "express": "5.2.1",
     "js-yaml": "4.1.0"
   }
 }
