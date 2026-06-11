@@ -31,8 +31,10 @@ services:
     environment:
       CONFIG_PATH: /config/blackbox.yml
       BLACKBOX_URL: http://blackbox:9115
+      # Browser-reachable blackbox URL; adds an "Open blackbox" link in the UI.
+      # Set it in your orchestrator (e.g. Portainer stack env) — empty disables the link.
+      PUBLIC_BLACKBOX_URL: ${PUBLIC_BLACKBOX_URL:-}
       # Optional:
-      # PUBLIC_BLACKBOX_URL: http://your-host:9115   # adds an "Open blackbox" link in the UI
       # BASIC_AUTH_USERNAME: admin
       # BASIC_AUTH_PASSWORD: change-me
       # READ_ONLY: "true"
